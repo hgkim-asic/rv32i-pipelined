@@ -9,14 +9,12 @@
 
 `define	IMEM_A_BIT				20
 `define DMEM_A_BIT				20
-
 `define IMEM_SIZE				2**(`IMEM_A_BIT-2)
 `define DMEM_SIZE				2**(`DMEM_A_BIT-2)
 
 `define SRC_RF_WD_ALU_RES		2'd0
 `define SRC_RF_WD_PC_PLUS_4		2'd1
 `define SRC_RF_WD_IMMEXT_RES	2'd2
-`define SRC_RF_WD_PC_PLUS_IMM	2'd3
 
 `define INSTR_R_TYPE			7'b0110011
 `define	INSTR_B_TYPE			7'b1100011
@@ -62,8 +60,5 @@
 `define FUNC3_BGE				3'h5
 `define FUNC3_BLTU				3'h6
 `define FUNC3_BGEU				3'h7
-
-`define SRC_PC_NEXT_PC_PLUS_4	2'd0
-`define SRC_PC_NEXT_PC_PLUS_IMM 2'd1
-`define SRC_PC_NEXT_ALU_RES		2'd2
 `endif
+

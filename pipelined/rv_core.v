@@ -4,11 +4,9 @@
 module rv_core (
 	input					i_core_clk,
 	input					i_core_rstn,
-
 	// Instr memory interface
 	input	[31:0]			i_core_imem_rd,
 	output	[`XLEN-1:0]		o_core_imem_ra,
-
 	// Data memory interface
 	input	[`XLEN-1:0]		i_core_dmem_rd,
 	output	[`XLEN-1:0]		o_core_dmem_a,
@@ -19,9 +17,7 @@ module rv_core (
 	wire					flush_ifid;
 	wire					stall_ifid;
 
-	wire	[`XLEN-1:0]		pc_plus_imm_if;			// EX -> IF
-	wire	[`XLEN-1:0]		alu_res_if;				// EX -> IF
-	wire	[1:0]			pc_next_sel;			// EX -> IF
+	wire	[`XLEN-1:0]		target_addr_if;
 
 	wire	[`XLEN-1:0]		rf_rd_fwd_mem;
 	wire	[`XLEN-1:0]		rf_rd_fwd_wb;
@@ -48,6 +44,7 @@ module rv_core (
 	wire					is_load_ex;
 	wire	[1:0]			is_br_jp_ex;
 	wire	[3:0]			alu_ctrl_ex;
+	wire					alu_a_sel_ex;
 	wire					alu_b_sel_ex;
 	wire					dmem_we_ex;
 	wire	[`XLEN-1:0]		dmem_wd_ex;
@@ -63,9 +60,8 @@ module rv_core (
 	// Output sigs of EX/MEM pipeline regs
 	wire					is_load_mem;
 	wire	[`XLEN-1:0]		alu_res_mem;
-	wire	[`XLEN-1:0]		immext_res_mem;
 	wire	[`XLEN-1:0]		pc_plus_4_mem;
-	wire	[`XLEN-1:0]		pc_plus_imm_mem;
+	wire	[`XLEN-1:0]		immext_res_mem;
 	wire					dmem_we_mem;
 	wire	[`XLEN-1:0]		dmem_wd_mem;
 	wire	[2:0]			dmem_bytectrl_mem;
@@ -103,9 +99,7 @@ module rv_core (
 		.i_if_imem_rd			(i_core_imem_rd			),
 		.o_if_imem_ra			(o_core_imem_ra			),
 	// EX Stage -> IF Stage
-		.i_if_alu_res			(alu_res_if				),
-		.i_if_pc_plus_imm		(pc_plus_imm_if			),
-		.i_if_pc_next_sel		(pc_next_sel			),
+		.i_if_target_addr		(target_addr_if			),
 	// IF Stage -> ID Stage
 		.o_if_id_pc				(pc_id					),
 		.o_if_id_instr			(instr_id				)
@@ -132,6 +126,7 @@ module rv_core (
 		.o_id_ex_is_br_jp		(is_br_jp_ex			),
 		.o_id_ex_is_load		(is_load_ex				),
 		.o_id_ex_alu_ctrl		(alu_ctrl_ex			),
+		.o_id_ex_alu_a_sel		(alu_a_sel_ex			),
 		.o_id_ex_alu_b_sel		(alu_b_sel_ex			),
 		.o_id_ex_dmem_we		(dmem_we_ex				),
 		.o_id_ex_dmem_bytectrl	(dmem_bytectrl_ex		),
@@ -140,7 +135,6 @@ module rv_core (
 		.o_id_ex_rf_rd1			(rf_rd1_ex				),
 		.o_id_ex_rf_rd2			(rf_rd2_ex				),
 		.o_id_ex_rf_wd_pre_sel	(rf_wd_pre_sel_ex		),
-
 	// to Hazard Unit
 		.o_id_ex_rf_ra1			(rf_ra1_ex				),
 		.o_id_ex_rf_ra2			(rf_ra2_ex				)
@@ -158,6 +152,7 @@ module rv_core (
 		.i_ex_is_br_jp			(is_br_jp_ex			),
 		.i_ex_is_load			(is_load_ex				),
 		.i_ex_alu_ctrl			(alu_ctrl_ex			),
+		.i_ex_alu_a_sel			(alu_a_sel_ex			),
 		.i_ex_alu_b_sel			(alu_b_sel_ex			),
 		.i_ex_dmem_we			(dmem_we_ex				),
 		.i_ex_dmem_bytectrl		(dmem_bytectrl_ex		),
@@ -167,15 +162,12 @@ module rv_core (
 		.i_ex_rf_rd2			(rf_rd2_ex				),
 		.i_ex_rf_wd_pre_sel		(rf_wd_pre_sel_ex		),
 	// EX Stage -> IF Stage
-		.o_ex_if_alu_res		(alu_res_if				),
-		.o_ex_if_pc_next_sel	(pc_next_sel			),
-		.o_ex_if_pc_plus_imm	(pc_plus_imm_if			),
+		.o_ex_if_target_addr	(target_addr_if			),
 	// EX Stage -> MEM Stage
 		.o_ex_mem_is_load		(is_load_mem			),
 		.o_ex_mem_alu_res		(alu_res_mem			),
 		.o_ex_mem_immext_res	(immext_res_mem			),
 		.o_ex_mem_pc_plus_4		(pc_plus_4_mem			),
-		.o_ex_mem_pc_plus_imm	(pc_plus_imm_mem		),
 		.o_ex_mem_dmem_we		(dmem_we_mem			),
 		.o_ex_mem_dmem_wd		(dmem_wd_mem			),
 		.o_ex_mem_dmem_bytectrl	(dmem_bytectrl_mem		),
@@ -202,9 +194,8 @@ module rv_core (
 	// EX Stage -> MEM Stage
 		.i_mem_is_load			(is_load_mem			),
 		.i_mem_alu_res			(alu_res_mem			),
-		.i_mem_immext_res		(immext_res_mem			),
 		.i_mem_pc_plus_4		(pc_plus_4_mem			),
-		.i_mem_pc_plus_imm		(pc_plus_imm_mem		),
+		.i_mem_immext_res		(immext_res_mem			),
 		.i_mem_dmem_we			(dmem_we_mem			),
 		.i_mem_dmem_wd			(dmem_wd_mem			),
 		.i_mem_dmem_bytectrl	(dmem_bytectrl_mem		),

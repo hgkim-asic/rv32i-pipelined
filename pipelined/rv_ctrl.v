@@ -8,6 +8,7 @@ module rv_ctrl(
 	output reg	[1:0]	o_ctrl_is_br_jp,		// 01: branch, 10: jalr, 11: jal, 00: neither
 	output				o_ctrl_is_load,
 	output reg	[3:0]	o_ctrl_alu_ctrl,
+	output				o_ctrl_alu_a_sel,
 	output				o_ctrl_alu_b_sel,
 	output				o_ctrl_dmem_we,
 	output reg	[2:0]	o_ctrl_dmem_bytectrl,
@@ -33,7 +34,10 @@ module rv_ctrl(
 	end
 
 	assign o_ctrl_is_load	= (i_ctrl_opcode == `INSTR_I_TYPE_LOAD);
-	assign o_ctrl_alu_b_sel = (i_ctrl_opcode == `INSTR_R_TYPE) || (i_ctrl_opcode == `INSTR_B_TYPE);
+
+	assign o_ctrl_alu_a_sel = (i_ctrl_opcode == `INSTR_U_TYPE_AUIPC) || (i_ctrl_opcode == `INSTR_J_TYPE) || (i_ctrl_opcode == `INSTR_B_TYPE);	// 1 ? select 'pc'	: select 'rs1'
+	assign o_ctrl_alu_b_sel = (i_ctrl_opcode == `INSTR_R_TYPE);																					// 1 ? select 'rs2' : select 'imm'
+
 	assign o_ctrl_dmem_we	= !illegal_instr ? (i_ctrl_opcode[6:4] == 3'b010)	: 1'b0; 	// instr is 'S-type'
 	assign o_ctrl_rf_we		= !illegal_instr ? (i_ctrl_opcode[5:2] != 4'b1000)	: 1'b0;		// instr is neither 'S-type' nor 'B-type'
 
@@ -41,9 +45,8 @@ module rv_ctrl(
 		case (i_ctrl_opcode)
 			`INSTR_I_TYPE_JALR,
 			`INSTR_J_TYPE		: o_ctrl_rf_wd_pre_sel = `SRC_RF_WD_PC_PLUS_4;		// instr is 'jal' or 'jalr'	
-			`INSTR_U_TYPE_AUIPC	: o_ctrl_rf_wd_pre_sel = `SRC_RF_WD_PC_PLUS_IMM;	// instr is 'auipc'
 			`INSTR_U_TYPE_LUI	: o_ctrl_rf_wd_pre_sel = `SRC_RF_WD_IMMEXT_RES;		// instr is 'lui'	
-			default				: o_ctrl_rf_wd_pre_sel = `SRC_RF_WD_ALU_RES;		// instr is 'R-type' or 'I_alu-type'
+			default				: o_ctrl_rf_wd_pre_sel = `SRC_RF_WD_ALU_RES;		// instr is 'R-type' or 'I_alu-type' or 'auipc'
 		endcase
 	end
 
@@ -77,22 +80,6 @@ module rv_ctrl(
 		endcase
 	end
 
-	/////////////////
-	// ALU Control //
-	/////////////////
-	
-	// R-type		: 0110011 -> all
-	// I_alu-type	: 0010011 -> all
-	//
-	// I_load-type	: 0000011 -> add
-	// I_jalr-type	: 1100111 -> add
-	// S-type		: 0100011 -> add
-	//
-	// B-type		: 1100011 -> 
-	//	- beq, bne		: 00x -> sub
-	// 	- blt, bge		: 10x -> slt
-	// 	- bltu, bgeu	: 11x -> sltu
-
 	always @(*) begin
 		case (i_ctrl_opcode)
 			`INSTR_R_TYPE,
@@ -106,13 +93,6 @@ module rv_ctrl(
 					 3'h5		: o_ctrl_alu_ctrl = i_ctrl_func7_5 ? `SRC_ALU_CTRL_SRA : `SRC_ALU_CTRL_SRL;
 					 3'h6		: o_ctrl_alu_ctrl = `SRC_ALU_CTRL_OR;
 					 3'h7		: o_ctrl_alu_ctrl = `SRC_ALU_CTRL_AND;
-				endcase
-			end
-			`INSTR_B_TYPE : begin
-				case (i_ctrl_func3[2:1])
-					 2'b00		: o_ctrl_alu_ctrl = `SRC_ALU_CTRL_SUB;
-					 2'b10		: o_ctrl_alu_ctrl = `SRC_ALU_CTRL_SLT;
-					 default	: o_ctrl_alu_ctrl = `SRC_ALU_CTRL_SLTU;
 				endcase
 			end
 			default : o_ctrl_alu_ctrl = `SRC_ALU_CTRL_ADD;

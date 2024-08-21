@@ -4,19 +4,16 @@
 module rv_id_stage (	
 	input						i_id_clk,
 	input						i_id_rstn,
-	input						i_id_flush,
-	input						i_id_stall,
-
+	input						i_id_flush,		// from EX
+	input						i_id_stall,		// from Haz
 	// IF Stage -> ID Stage
 	input		[`XLEN-1:0]		i_id_pc,
 	input		[31:0]			i_id_instr,
-
 	// Register file interface
 	input		[`XLEN-1:0]		i_id_rf_rd1,
 	input		[`XLEN-1:0]		i_id_rf_rd2,
 	output		[4:0]			o_id_rf_ra1,
 	output		[4:0]			o_id_rf_ra2,
-
 	// ID Stage -> EX Stage
 	output reg	[`XLEN-1:0]		o_id_ex_pc,
 	output reg	[2:0]			o_id_ex_func3,
@@ -24,6 +21,7 @@ module rv_id_stage (
 	output reg	[1:0]			o_id_ex_is_br_jp,		// 01: branch, 10: jal, 11: jalr, 00: neither
 	output reg					o_id_ex_is_load,
 	output reg	[3:0]			o_id_ex_alu_ctrl,
+	output reg					o_id_ex_alu_a_sel,
 	output reg					o_id_ex_alu_b_sel,
 	output reg					o_id_ex_dmem_we,
 	output reg	[2:0]			o_id_ex_dmem_bytectrl,
@@ -32,7 +30,6 @@ module rv_id_stage (
 	output reg	[`XLEN-1:0]		o_id_ex_rf_rd1,
 	output reg	[`XLEN-1:0]		o_id_ex_rf_rd2,
 	output reg	[1:0]			o_id_ex_rf_wd_pre_sel,
-
 	// Forwarding
 	output reg	[4:0]			o_id_ex_rf_ra1,			// to Hazard Unit
 	output reg	[4:0]			o_id_ex_rf_ra2			// to Hazard Unit
@@ -44,6 +41,7 @@ module rv_id_stage (
 	wire [`XLEN-1:0]	immext_res_id;
 	
 	wire [3:0]			alu_ctrl_id;
+	wire				alu_a_sel_id;
 	wire				alu_b_sel_id;
 	
 	wire 				dmem_we_id;
@@ -66,6 +64,7 @@ module rv_id_stage (
 		.o_ctrl_is_br_jp			(is_br_jp_id								),
 		.o_ctrl_is_load				(is_load_id									),
 		.o_ctrl_alu_ctrl			(alu_ctrl_id								),
+		.o_ctrl_alu_a_sel			(alu_a_sel_id								),
 		.o_ctrl_alu_b_sel			(alu_b_sel_id								),
 		.o_ctrl_dmem_we				(dmem_we_id									),
 		.o_ctrl_dmem_bytectrl		(dmem_bytectrl_id							),
@@ -92,6 +91,7 @@ module rv_id_stage (
 			o_id_ex_is_br_jp		<= 'd0;
 			o_id_ex_is_load			<= 'd0;
 			o_id_ex_alu_ctrl 		<= 'd0;
+			o_id_ex_alu_a_sel		<= 'd0;
 			o_id_ex_alu_b_sel		<= 'd0;
 			o_id_ex_dmem_we			<= 'd0;
 			o_id_ex_dmem_bytectrl	<= 'd0;
@@ -110,6 +110,7 @@ module rv_id_stage (
 				o_id_ex_is_br_jp		<= 'd0;
 				o_id_ex_is_load			<= 'd0;
 				o_id_ex_alu_ctrl 		<= 'd0;
+				o_id_ex_alu_a_sel		<= 'd0;
 				o_id_ex_alu_b_sel		<= 'd0;
 				o_id_ex_dmem_we			<= 'd0;
 				o_id_ex_dmem_bytectrl	<= 'd0;
@@ -127,6 +128,7 @@ module rv_id_stage (
 				o_id_ex_is_br_jp		<= is_br_jp_id;
 				o_id_ex_is_load			<= is_load_id;
 				o_id_ex_alu_ctrl 		<= alu_ctrl_id;
+				o_id_ex_alu_a_sel		<= alu_a_sel_id;
 				o_id_ex_alu_b_sel		<= alu_b_sel_id;
 				o_id_ex_dmem_we			<= dmem_we_id;
 				o_id_ex_dmem_bytectrl	<= dmem_bytectrl_id;

@@ -4,8 +4,8 @@ module rv_alu (
 	input		[`XLEN-1:0]		i_alu_a,
 	input		[`XLEN-1:0]		i_alu_b,
 	input		[3:0]			i_alu_ctrl,
-	output reg	[`XLEN-1:0]		o_alu_res,
-	output						o_alu_zero
+//	output						o_alu_zero,
+	output reg	[`XLEN-1:0]		o_alu_res
 );
 	always @(*) begin
 		case (i_alu_ctrl)
@@ -23,5 +23,5 @@ module rv_alu (
 		endcase
 	end
 
-	assign o_alu_zero = o_alu_res == 0;
+//	assign o_alu_zero = o_alu_res == 0;
 endmodule

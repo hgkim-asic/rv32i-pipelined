@@ -7,12 +7,10 @@ module rv_wb_stage (
 	input					i_wb_rf_we,
 	input	[4:0]			i_wb_rf_wa,
 	input	[`XLEN-1:0]		i_wb_rf_wd_pre,
-
 	// Register file interface
 	output					o_wb_rf_we,
 	output	[4:0]			o_wb_rf_wa,
 	output	[`XLEN-1:0]		o_wb_rf_wd,
-
 	// Forwarding
 	output	[`XLEN-1:0]		o_wb_rf_rd_fwd
 );
