@@ -1,5 +1,5 @@
 `include "../common/rv_configs.v"
-`include "../common/rv_regfile_latch.v"
+`include "../common/rv_regfile.v"
 
 module rv_core (
 	input					i_core_clk,
@@ -76,8 +76,8 @@ module rv_core (
 	wire	[4:0]			rf_wa_wb;
 	wire	[`XLEN-1:0]		rf_wd_pre_wb;
 
-	rv_regfile_latch
-	u_rv_regfle_latch(
+	rv_regfile
+	u_rv_regfle(
 		.i_rf_clk				(i_core_clk				),
 		.i_rf_rstn				(i_core_rstn			),
 		.i_rf_ra1				(rf_ra1_core			),
