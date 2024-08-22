@@ -44,7 +44,7 @@ module rv_ex_stage (
 );
 	wire	[`XLEN-1:0]		pc_plus_4_ex;
 
-	reg		[`XLEN-1:0]		rf_rd_muxed [1:2];
+	reg		[`XLEN-1:0]		rf_rd_muxed_ex [1:2];
 	
 	reg		[`XLEN-1:0]		alu_a;
 	reg		[`XLEN-1:0]		alu_b;
@@ -54,22 +54,22 @@ module rv_ex_stage (
 
 	always @(*) begin
 		case (i_ex_rf_rd1_sel)
-			2'b01	: rf_rd_muxed[1] = i_ex_rf_rd_fwd_mem;
-			2'b10	: rf_rd_muxed[1] = i_ex_rf_rd_fwd_wb;
-			default	: rf_rd_muxed[1] = i_ex_rf_rd1;
+			2'b01	: rf_rd_muxed_ex[1] = i_ex_rf_rd_fwd_mem;
+			2'b10	: rf_rd_muxed_ex[1] = i_ex_rf_rd_fwd_wb;
+			default	: rf_rd_muxed_ex[1] = i_ex_rf_rd1;
 		endcase
 	end
 
 	always @(*) begin
 		case (i_ex_rf_rd2_sel)
-			2'b01	: rf_rd_muxed[2] = i_ex_rf_rd_fwd_mem;
-			2'b10	: rf_rd_muxed[2] = i_ex_rf_rd_fwd_wb;
-			default	: rf_rd_muxed[2] = i_ex_rf_rd2;
+			2'b01	: rf_rd_muxed_ex[2] = i_ex_rf_rd_fwd_mem;
+			2'b10	: rf_rd_muxed_ex[2] = i_ex_rf_rd_fwd_wb;
+			default	: rf_rd_muxed_ex[2] = i_ex_rf_rd2;
 		endcase
 	end
 
-	assign alu_a = i_ex_alu_a_sel ? i_ex_pc			: rf_rd_muxed[1];
-	assign alu_b = i_ex_alu_b_sel ? rf_rd_muxed[2]	: i_ex_ext_imm;
+	assign alu_a = i_ex_alu_a_sel ? i_ex_pc				: rf_rd_muxed_ex[1];
+	assign alu_b = i_ex_alu_b_sel ? rf_rd_muxed_ex[2]	: i_ex_ext_imm;
 
 	rv_alu 
 	u_rv_alu(
@@ -81,8 +81,8 @@ module rv_ex_stage (
 
 	rv_branch_comp
 	u_rv_branch_comp(
-		.i_brcomp_a				(rf_rd_muxed[1]			),
-		.i_brcomp_b				(rf_rd_muxed[2]			),
+		.i_brcomp_a				(rf_rd_muxed_ex[1]		),
+		.i_brcomp_b				(rf_rd_muxed_ex[2]		),
 		.i_brcomp_func3_ex		(i_ex_func3				),
 		.i_brcomp_is_branch_ex	(i_ex_is_branch			),
 		.i_brcomp_is_jump_ex	(i_ex_is_jump			),
@@ -120,7 +120,7 @@ module rv_ex_stage (
 			o_ex_mem_alu_res		<= alu_res_ex;
 			o_ex_mem_pc_plus_4		<= pc_plus_4_ex;
 			o_ex_mem_ext_imm		<= i_ex_ext_imm;
-			o_ex_mem_dmem_wd		<= rf_rd_muxed[2];
+			o_ex_mem_dmem_wd		<= rf_rd_muxed_ex[2];
 			o_ex_mem_dmem_bytectrl	<= i_ex_dmem_bytectrl;
 			o_ex_mem_rf_wa			<= i_ex_rf_wa;
 			o_ex_mem_rf_wd_pre_sel	<= i_ex_rf_wd_pre_sel;

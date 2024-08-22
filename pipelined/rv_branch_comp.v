@@ -26,5 +26,4 @@ module rv_branch_comp (
 			default		: take_branch = !brcomp_ltu; // bgeu
 		endcase
 	end
-
 endmodule

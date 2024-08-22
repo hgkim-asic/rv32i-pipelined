@@ -43,9 +43,9 @@ module rv_core (
 	wire	[`XLEN-1:0]		pc_ex;
 	wire	[2:0]			func3_ex;
 	wire	[`XLEN-1:0]		ext_imm_ex;
-	wire					is_load_ex;
 	wire					is_branch_ex;
 	wire					is_jump_ex;
+	wire					is_load_ex;
 	wire	[3:0]			alu_ctrl_ex;
 	wire					alu_a_sel_ex;
 	wire					alu_b_sel_ex;
@@ -142,10 +142,10 @@ module rv_core (
 		.o_id_ex_rf_wd_pre_sel	(rf_wd_pre_sel_ex		),
 	// Forwarding
 		.i_id_rf_rd_fwd_wb		(rf_rd_fwd_wb			),	// from WB
-		.i_id_rf_rd1_sel		(rf_rd1_sel_id			),	// from WB
-		.i_id_rf_rd2_sel		(rf_rd2_sel_id			),	// from WB
-		.o_id_ex_rf_ra1			(rf_ra1_ex				),
-		.o_id_ex_rf_ra2			(rf_ra2_ex				)
+		.i_id_rf_rd1_sel		(rf_rd1_sel_id			),	// from Haz
+		.i_id_rf_rd2_sel		(rf_rd2_sel_id			),	// from Haz
+		.o_id_ex_rf_ra1			(rf_ra1_ex				),	// to Haz
+		.o_id_ex_rf_ra2			(rf_ra2_ex				)	// to Haz
 	);
 
 	rv_ex_stage 
@@ -234,7 +234,7 @@ module rv_core (
 		.i_wb_rf_we				(rf_we_wb				),
 		.i_wb_rf_wd_pre			(rf_wd_pre_wb			),
 	// Forwarding
-		.o_wb_rf_rd_fwd			(rf_rd_fwd_wb			)	// to EX
+		.o_wb_rf_rd_fwd			(rf_rd_fwd_wb			)	// to ID, EX
 	);
 
 	rv_hazard_unit 

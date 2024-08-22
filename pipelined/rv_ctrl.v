@@ -34,9 +34,9 @@ module rv_ctrl(
 		endcase
 	end
 
-	assign o_ctrl_is_load	= (i_ctrl_opcode == `INSTR_I_TYPE_LOAD);
 	assign o_ctrl_is_branch	= (i_ctrl_opcode == `INSTR_B_TYPE);
 	assign o_ctrl_is_jump	= (i_ctrl_opcode == `INSTR_J_TYPE) || (i_ctrl_opcode == `INSTR_I_TYPE_JALR);
+	assign o_ctrl_is_load	= (i_ctrl_opcode == `INSTR_I_TYPE_LOAD);
 
 	assign o_ctrl_alu_a_sel = (i_ctrl_opcode == `INSTR_U_TYPE_AUIPC) || (i_ctrl_opcode == `INSTR_J_TYPE) || (i_ctrl_opcode == `INSTR_B_TYPE);	// 1 ? select 'pc'	: select 'rs1'
 	assign o_ctrl_alu_b_sel = (i_ctrl_opcode == `INSTR_R_TYPE);																					// 1 ? select 'rs2' : select 'imm'
@@ -79,7 +79,7 @@ module rv_ctrl(
 			`INSTR_R_TYPE,
 			`INSTR_I_TYPE_ALU : begin
 				case (i_ctrl_func3)
-					 3'h0		: o_ctrl_alu_ctrl = (i_ctrl_opcode[5] && i_ctrl_func7_5) ? `SRC_ALU_CTRL_SUB : `SRC_ALU_CTRL_ADD;
+					 3'h0		: o_ctrl_alu_ctrl = i_ctrl_opcode[5]&&i_ctrl_func7_5 ? `SRC_ALU_CTRL_SUB : `SRC_ALU_CTRL_ADD;
 					 3'h1		: o_ctrl_alu_ctrl = `SRC_ALU_CTRL_SLL;
 					 3'h2		: o_ctrl_alu_ctrl = `SRC_ALU_CTRL_SLT;
 					 3'h3		: o_ctrl_alu_ctrl = `SRC_ALU_CTRL_SLTU;

@@ -12,7 +12,7 @@ module rv_wb_stage (
 	output	[4:0]			o_wb_rf_wa,
 	output	[`XLEN-1:0]		o_wb_rf_wd,
 	// Forwarding
-	output	[`XLEN-1:0]		o_wb_rf_rd_fwd
+	output	[`XLEN-1:0]		o_wb_rf_rd_fwd	// to ID, EX
 );
 	assign o_wb_rf_we		= i_wb_rf_we;
 	assign o_wb_rf_wa		= i_wb_rf_wa;

@@ -52,18 +52,17 @@ module rv_id_stage (
 	wire 				dmem_we_id;
 	wire [2:0]			dmem_bytectrl_id;
 	
-	wire [`XLEN-1:0]	rf_rd_muxed [1:2];
-
 	wire 				rf_we_id;
 	wire [4:0]			rf_wa_id;
 	wire [1:0]			rf_wd_pre_sel_id;
+	wire [`XLEN-1:0]	rf_rd_muxed_id [1:2];
 	
-	assign rf_wa_id		= i_id_instr[11:7];
-	assign o_id_rf_ra1	= i_id_instr[19:15];
-	assign o_id_rf_ra2	= i_id_instr[24:20];
+	assign rf_wa_id				= i_id_instr[11:7];
+	assign o_id_rf_ra1			= i_id_instr[19:15];
+	assign o_id_rf_ra2			= i_id_instr[24:20];
 
-	assign rf_rd_muxed[1] = i_id_rf_rd1_sel ? i_id_rf_rd_fwd_wb : i_id_rf_rd1;
-	assign rf_rd_muxed[2] = i_id_rf_rd2_sel ? i_id_rf_rd_fwd_wb : i_id_rf_rd2;
+	assign rf_rd_muxed_id[1]	= i_id_rf_rd1_sel ? i_id_rf_rd_fwd_wb : i_id_rf_rd1;
+	assign rf_rd_muxed_id[2]	= i_id_rf_rd2_sel ? i_id_rf_rd_fwd_wb : i_id_rf_rd2;
 
 	rv_ctrl 
 	u_rv_ctrl(
@@ -148,8 +147,8 @@ module rv_id_stage (
 				o_id_ex_dmem_bytectrl	<= dmem_bytectrl_id;
 				o_id_ex_rf_wa 			<= rf_wa_id;
 				o_id_ex_rf_we			<= rf_we_id;
-				o_id_ex_rf_rd1			<= rf_rd_muxed[1];
-				o_id_ex_rf_rd2			<= rf_rd_muxed[2];
+				o_id_ex_rf_rd1			<= rf_rd_muxed_id[1];
+				o_id_ex_rf_rd2			<= rf_rd_muxed_id[2];
 				o_id_ex_rf_wd_pre_sel	<= rf_wd_pre_sel_id;
 				o_id_ex_rf_ra1			<= o_id_rf_ra1;
 				o_id_ex_rf_ra2			<= o_id_rf_ra2;

@@ -27,6 +27,9 @@ module rv_hazard_unit(
 	assign raw_hazard[2][0]	= (i_haz_rf_ra2_ex == i_haz_rf_wa_mem)	&&	i_haz_rf_we_mem;
 	assign raw_hazard[2][1] = (i_haz_rf_ra2_ex == i_haz_rf_wa_wb)	&&	i_haz_rf_we_wb;
 
+	assign o_haz_rf_rd1_sel_id = (i_haz_rf_ra1_id==i_haz_rf_wa_wb) && i_haz_rf_we_wb && (i_haz_rf_wa_wb != 5'b0);
+	assign o_haz_rf_rd2_sel_id = (i_haz_rf_ra2_id==i_haz_rf_wa_wb) && i_haz_rf_we_wb && (i_haz_rf_wa_wb != 5'b0);
+
 	always @(*) begin
 		case (raw_hazard[1])
 			2'b00 : o_haz_rf_rd1_sel_ex = `SRC_RF_RD_EX;
@@ -45,6 +48,4 @@ module rv_hazard_unit(
 		endcase
 	end
 
-	assign o_haz_rf_rd1_sel_id = (i_haz_rf_ra1_id==i_haz_rf_wa_wb) && i_haz_rf_we_wb && (i_haz_rf_wa_wb != 5'b0);
-	assign o_haz_rf_rd2_sel_id = (i_haz_rf_ra2_id==i_haz_rf_wa_wb) && i_haz_rf_we_wb && (i_haz_rf_wa_wb != 5'b0);
 endmodule
