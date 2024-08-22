@@ -14,7 +14,7 @@ module rv_regfile (
 	reg [`XLEN-1:0]	reg_arr [0:31];
 
 	integer i;
-	always @(negedge i_rf_clk) begin
+	always @(posedge i_rf_clk) begin
 		if (!i_rf_rstn) begin
 			for (i=0; i<32; i=i+1) begin
 				reg_arr[i] <= `XLEN'd0;

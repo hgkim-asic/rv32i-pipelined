@@ -5,7 +5,8 @@ module rv_ctrl(
 	input		[2:0]	i_ctrl_func3,
 	input				i_ctrl_func7_5,
 	output reg	[2:0]	o_ctrl_immext_ctrl,
-	output reg	[1:0]	o_ctrl_is_br_jp,		// 01: branch, 10: jalr, 11: jal, 00: neither
+	output				o_ctrl_is_branch,
+	output				o_ctrl_is_jump,
 	output				o_ctrl_is_load,
 	output reg	[3:0]	o_ctrl_alu_ctrl,
 	output				o_ctrl_alu_a_sel,
@@ -34,6 +35,8 @@ module rv_ctrl(
 	end
 
 	assign o_ctrl_is_load	= (i_ctrl_opcode == `INSTR_I_TYPE_LOAD);
+	assign o_ctrl_is_branch	= (i_ctrl_opcode == `INSTR_B_TYPE);
+	assign o_ctrl_is_jump	= (i_ctrl_opcode == `INSTR_J_TYPE) || (i_ctrl_opcode == `INSTR_I_TYPE_JALR);
 
 	assign o_ctrl_alu_a_sel = (i_ctrl_opcode == `INSTR_U_TYPE_AUIPC) || (i_ctrl_opcode == `INSTR_J_TYPE) || (i_ctrl_opcode == `INSTR_B_TYPE);	// 1 ? select 'pc'	: select 'rs1'
 	assign o_ctrl_alu_b_sel = (i_ctrl_opcode == `INSTR_R_TYPE);																					// 1 ? select 'rs2' : select 'imm'
@@ -45,17 +48,8 @@ module rv_ctrl(
 		case (i_ctrl_opcode)
 			`INSTR_I_TYPE_JALR,
 			`INSTR_J_TYPE		: o_ctrl_rf_wd_pre_sel = `SRC_RF_WD_PC_PLUS_4;		// instr is 'jal' or 'jalr'	
-			`INSTR_U_TYPE_LUI	: o_ctrl_rf_wd_pre_sel = `SRC_RF_WD_IMMEXT_RES;		// instr is 'lui'	
+			`INSTR_U_TYPE_LUI	: o_ctrl_rf_wd_pre_sel = `SRC_RF_WD_EXT_IMM;		// instr is 'lui'	
 			default				: o_ctrl_rf_wd_pre_sel = `SRC_RF_WD_ALU_RES;		// instr is 'R-type' or 'I_alu-type' or 'auipc'
-		endcase
-	end
-
-	always @(*) begin
-		case (i_ctrl_opcode)
-			`INSTR_B_TYPE		: o_ctrl_is_br_jp = 2'b01;	// instr is 'B-type'
-			`INSTR_I_TYPE_JALR	: o_ctrl_is_br_jp = 2'b10;	// instr is 'jalr'
-			`INSTR_J_TYPE 		: o_ctrl_is_br_jp = 2'b11;	// instr is 'jal'
-			default				: o_ctrl_is_br_jp = 2'b00;
 		endcase
 	end
 

@@ -43,11 +43,9 @@ module rv_top (
 	u_rv_core(
 		.i_core_clk				(i_top_clk					),
 		.i_core_rstn			(i_top_rstn					),
-
 	// Instr memory interface
 		.i_core_imem_rd			(imem_rd					),
 		.o_core_imem_ra			(imem_ra					),
-
 	// Data memory interface
 		.i_core_dmem_rd			(dmem_rd					),
 		.o_core_dmem_a			(dmem_a						),

@@ -9,7 +9,7 @@ module rv_dmem (
 	input		[2:0]				i_dmem_bytectrl,
 	output reg	[`XLEN-1:0]			o_dmem_rd
 );
-	wire [`DMEM_A_BIT-1:2]	dmem_a_word	= i_dmem_a[`DMEM_A_BIT-1:2]; // word address
+	wire [`DMEM_A_BIT-3:0]	dmem_a_word	= i_dmem_a[`DMEM_A_BIT-1:2]; // word address
 
 	reg [`XLEN-1:0]			mem_array [0:`DMEM_SIZE-1];
 	reg [8*128-1:0]			file_data_mif;

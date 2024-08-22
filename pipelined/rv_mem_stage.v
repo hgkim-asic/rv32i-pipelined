@@ -6,7 +6,7 @@ module rv_mem_stage (
 	// EX Stage -> MEM Stage	
 	input	 					i_mem_is_load,
 	input		[`XLEN-1:0]		i_mem_alu_res,
-	input		[`XLEN-1:0]		i_mem_immext_res,
+	input		[`XLEN-1:0]		i_mem_ext_imm,
 	input		[`XLEN-1:0]		i_mem_pc_plus_4,
 	input						i_mem_dmem_we,
 	input	 	[`XLEN-1:0]		i_mem_dmem_wd,
@@ -27,7 +27,7 @@ module rv_mem_stage (
 	output		[`XLEN-1:0]		o_mem_dmem_wd,
 	output	 	[2:0]			o_mem_dmem_bytectrl,
 	// Forwarding
-	output reg [`XLEN-1:0]		o_mem_rf_rd_fwd			// to EX
+	output reg	[`XLEN-1:0]		o_mem_rf_rd_fwd			// to EX
 );
 	assign o_mem_dmem_a			= i_mem_alu_res;
 	assign o_mem_dmem_we		= i_mem_dmem_we;
@@ -36,7 +36,7 @@ module rv_mem_stage (
 
 	always @(*) begin
 		case (i_mem_rf_wd_pre_sel)
-			`SRC_RF_WD_IMMEXT_RES	: o_mem_rf_rd_fwd = i_mem_immext_res;
+			`SRC_RF_WD_EXT_IMM		: o_mem_rf_rd_fwd = i_mem_ext_imm;
 			`SRC_RF_WD_PC_PLUS_4	: o_mem_rf_rd_fwd = i_mem_pc_plus_4;
 			default					: o_mem_rf_rd_fwd = i_mem_alu_res;
 		endcase

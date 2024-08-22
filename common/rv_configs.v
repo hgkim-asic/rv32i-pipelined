@@ -13,8 +13,8 @@
 `define DMEM_SIZE				2**(`DMEM_A_BIT-2)
 
 `define SRC_RF_WD_ALU_RES		2'd0
-`define SRC_RF_WD_PC_PLUS_4		2'd1
-`define SRC_RF_WD_IMMEXT_RES	2'd2
+`define SRC_RF_WD_EXT_IMM		2'd1
+`define SRC_RF_WD_PC_PLUS_4		2'd2
 
 `define INSTR_R_TYPE			7'b0110011
 `define	INSTR_B_TYPE			7'b1100011

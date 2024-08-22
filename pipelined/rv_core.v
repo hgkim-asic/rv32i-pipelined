@@ -17,12 +17,14 @@ module rv_core (
 	wire					flush_ifid;
 	wire					stall_ifid;
 
-	wire	[`XLEN-1:0]		target_addr_if;
+	wire	[`XLEN-1:0]		target_addr;
 
 	wire	[`XLEN-1:0]		rf_rd_fwd_mem;
 	wire	[`XLEN-1:0]		rf_rd_fwd_wb;
-	wire	[1:0]			rf_rd1_sel;
-	wire	[1:0]			rf_rd2_sel;
+	wire					rf_rd1_sel_id;
+	wire					rf_rd2_sel_id;
+	wire	[1:0]			rf_rd1_sel_ex;
+	wire	[1:0]			rf_rd2_sel_ex;
 
 	// Register file interface
 	wire					rf_we_core;
@@ -40,9 +42,10 @@ module rv_core (
 	// Output sigs of ID/EX pipeline regs
 	wire	[`XLEN-1:0]		pc_ex;
 	wire	[2:0]			func3_ex;
-	wire	[`XLEN-1:0]		immext_res_ex;
+	wire	[`XLEN-1:0]		ext_imm_ex;
 	wire					is_load_ex;
-	wire	[1:0]			is_br_jp_ex;
+	wire					is_branch_ex;
+	wire					is_jump_ex;
 	wire	[3:0]			alu_ctrl_ex;
 	wire					alu_a_sel_ex;
 	wire					alu_b_sel_ex;
@@ -54,6 +57,7 @@ module rv_core (
 	wire	[`XLEN-1:0]		rf_rd1_ex;
 	wire	[`XLEN-1:0]		rf_rd2_ex;
 	wire	[1:0]			rf_wd_pre_sel_ex;
+
 	wire	[4:0]			rf_ra1_ex;
 	wire	[4:0]			rf_ra2_ex;
 
@@ -61,7 +65,7 @@ module rv_core (
 	wire					is_load_mem;
 	wire	[`XLEN-1:0]		alu_res_mem;
 	wire	[`XLEN-1:0]		pc_plus_4_mem;
-	wire	[`XLEN-1:0]		immext_res_mem;
+	wire	[`XLEN-1:0]		ext_imm_mem;
 	wire					dmem_we_mem;
 	wire	[`XLEN-1:0]		dmem_wd_mem;
 	wire	[2:0]			dmem_bytectrl_mem;
@@ -99,7 +103,7 @@ module rv_core (
 		.i_if_imem_rd			(i_core_imem_rd			),
 		.o_if_imem_ra			(o_core_imem_ra			),
 	// EX Stage -> IF Stage
-		.i_if_target_addr		(target_addr_if			),
+		.i_if_target_addr		(target_addr			),
 	// IF Stage -> ID Stage
 		.o_if_id_pc				(pc_id					),
 		.o_if_id_instr			(instr_id				)
@@ -122,8 +126,9 @@ module rv_core (
 	// ID Stage -> EX Stage
 		.o_id_ex_pc				(pc_ex					),
 		.o_id_ex_func3			(func3_ex				),
-		.o_id_ex_immext_res		(immext_res_ex			),
-		.o_id_ex_is_br_jp		(is_br_jp_ex			),
+		.o_id_ex_ext_imm		(ext_imm_ex				),
+		.o_id_ex_is_branch		(is_branch_ex			),
+		.o_id_ex_is_jump		(is_jump_ex				),
 		.o_id_ex_is_load		(is_load_ex				),
 		.o_id_ex_alu_ctrl		(alu_ctrl_ex			),
 		.o_id_ex_alu_a_sel		(alu_a_sel_ex			),
@@ -135,7 +140,10 @@ module rv_core (
 		.o_id_ex_rf_rd1			(rf_rd1_ex				),
 		.o_id_ex_rf_rd2			(rf_rd2_ex				),
 		.o_id_ex_rf_wd_pre_sel	(rf_wd_pre_sel_ex		),
-	// to Hazard Unit
+	// Forwarding
+		.i_id_rf_rd_fwd_wb		(rf_rd_fwd_wb			),	// from WB
+		.i_id_rf_rd1_sel		(rf_rd1_sel_id			),	// from WB
+		.i_id_rf_rd2_sel		(rf_rd2_sel_id			),	// from WB
 		.o_id_ex_rf_ra1			(rf_ra1_ex				),
 		.o_id_ex_rf_ra2			(rf_ra2_ex				)
 	);
@@ -148,8 +156,9 @@ module rv_core (
 	// ID Stage -> EX Stage
 		.i_ex_pc				(pc_ex					),
 		.i_ex_func3				(func3_ex				),
-		.i_ex_immext_res		(immext_res_ex			),
-		.i_ex_is_br_jp			(is_br_jp_ex			),
+		.i_ex_ext_imm			(ext_imm_ex				),
+		.i_ex_is_branch			(is_branch_ex			),
+		.i_ex_is_jump			(is_jump_ex				),
 		.i_ex_is_load			(is_load_ex				),
 		.i_ex_alu_ctrl			(alu_ctrl_ex			),
 		.i_ex_alu_a_sel			(alu_a_sel_ex			),
@@ -162,11 +171,11 @@ module rv_core (
 		.i_ex_rf_rd2			(rf_rd2_ex				),
 		.i_ex_rf_wd_pre_sel		(rf_wd_pre_sel_ex		),
 	// EX Stage -> IF Stage
-		.o_ex_if_target_addr	(target_addr_if			),
+		.o_ex_if_target_addr	(target_addr			),
 	// EX Stage -> MEM Stage
 		.o_ex_mem_is_load		(is_load_mem			),
 		.o_ex_mem_alu_res		(alu_res_mem			),
-		.o_ex_mem_immext_res	(immext_res_mem			),
+		.o_ex_mem_ext_imm		(ext_imm_mem			),
 		.o_ex_mem_pc_plus_4		(pc_plus_4_mem			),
 		.o_ex_mem_dmem_we		(dmem_we_mem			),
 		.o_ex_mem_dmem_wd		(dmem_wd_mem			),
@@ -175,10 +184,10 @@ module rv_core (
 		.o_ex_mem_rf_we			(rf_we_mem				),
 		.o_ex_mem_rf_wd_pre_sel	(rf_wd_pre_sel_mem		),
 	// Forwarding
-		.i_ex_rf_rd_mem			(rf_rd_fwd_mem			),	// from MEM
-		.i_ex_rf_rd_wb			(rf_rd_fwd_wb			),	// from WB
-		.i_ex_rf_rd1_sel		(rf_rd1_sel				),	// from Haz
-		.i_ex_rf_rd2_sel		(rf_rd2_sel				)	// from Haz
+		.i_ex_rf_rd_fwd_mem		(rf_rd_fwd_mem			),	// from MEM
+		.i_ex_rf_rd_fwd_wb		(rf_rd_fwd_wb			),	// from WB
+		.i_ex_rf_rd1_sel		(rf_rd1_sel_ex			),	// from Haz
+		.i_ex_rf_rd2_sel		(rf_rd2_sel_ex			)	// from Haz
 	);
 
 	rv_mem_stage 
@@ -195,7 +204,7 @@ module rv_core (
 		.i_mem_is_load			(is_load_mem			),
 		.i_mem_alu_res			(alu_res_mem			),
 		.i_mem_pc_plus_4		(pc_plus_4_mem			),
-		.i_mem_immext_res		(immext_res_mem			),
+		.i_mem_ext_imm			(ext_imm_mem			),
 		.i_mem_dmem_we			(dmem_we_mem			),
 		.i_mem_dmem_wd			(dmem_wd_mem			),
 		.i_mem_dmem_bytectrl	(dmem_bytectrl_mem		),
@@ -232,14 +241,18 @@ module rv_core (
 	u_rv_hazard_unit(
 		.i_haz_is_load_mem		(is_load_mem			),
 		.i_haz_is_load_wb		(is_load_wb				),
+		.i_haz_rf_ra1_id		(rf_ra1_core			),
+		.i_haz_rf_ra2_id		(rf_ra2_core			),
 		.i_haz_rf_ra1_ex		(rf_ra1_ex				),
 		.i_haz_rf_ra2_ex		(rf_ra2_ex				),
 		.i_haz_rf_we_mem		(rf_we_mem				),
 		.i_haz_rf_wa_mem		(rf_wa_mem				),
 		.i_haz_rf_we_wb			(rf_we_wb				),
 		.i_haz_rf_wa_wb			(rf_wa_wb				),
-		.o_haz_rf_rd1_sel		(rf_rd1_sel				),	// to EX
-		.o_haz_rf_rd2_sel		(rf_rd2_sel				),	// to EX
+		.o_haz_rf_rd1_sel_ex	(rf_rd1_sel_ex			),	// to EX
+		.o_haz_rf_rd2_sel_ex	(rf_rd2_sel_ex			),	// to EX
+		.o_haz_rf_rd1_sel_id	(rf_rd1_sel_id			),	// to ID
+		.o_haz_rf_rd2_sel_id	(rf_rd2_sel_id			),	// to ID
 		.o_haz_stall_ifid		(stall_ifid				)	// to IF, ID
 	);
 endmodule
